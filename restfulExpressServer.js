@@ -1,18 +1,39 @@
+const { Pool } = require("pg");
+const pool = new Pool({
+  user: "postgres",
+  host: "localHost",
+  database: "petshopdb",
+  password: "SH@t@wni10",
+  port: 5432,
+});
+pool.connect();
+const text =
+  "INSERT INTO pets (age, kind, name) VALUES ($1, $2, $3) RETURNING *";
+const values = [7, "dog", "Brian"];
+
+pool.query(text, values, (err, res) => {
+  if (err) {
+    console.log(err.stack);
+  } else {
+    console.log(res.rows[0]);
+  }
+});
+
 const express = require("express");
 const fs = require("fs");
 const app = express();
 const port = 8000;
 app.use(express.json());
 
-app.get("/pets", (req, res) => {
-  fs.readFile("pets.json", "utf8", (error, data) => {
-    if (error) {
-      console.log(error);
-    } else {
-      jsonObj = JSON.parse(data);
-      res.send(jsonObj);
-    }
-  });
+app.get("/pets", async (req, res) => {
+  try {
+    const data = await pool.query("SELECT * FROM pets;");
+    //fs.readFile("pets.json", "utf8", (error, data) => {
+    //if (error) {
+    res.send(data.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
 });
 
 app.get("/pets/:id", (req, res) => {
